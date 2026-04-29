@@ -8,9 +8,11 @@ import (
 	"github.com/kamil7430/raspberry-voip/internal/handlers"
 )
 
+const httpServerAddr = ":2137"
+
 func runHttpServer() {
 	log.Println("Creating a web server instance...")
-	server := handlers.NewServer(":2137")
+	server := handlers.NewServer(httpServerAddr)
 	defer server.Close()
 
 	log.Println("Running the web server...")
