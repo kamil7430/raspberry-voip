@@ -9,7 +9,7 @@ import (
 func main() {
 	log.Println("Starting RPi VoIP!")
 
-	s := state.State{}
+	s := state.NewState()
 
 	runHttpServer(&s) // will be a go routine
 }

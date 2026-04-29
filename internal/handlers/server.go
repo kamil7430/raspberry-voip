@@ -18,6 +18,7 @@ func NewHttpServer(state *state.State, addr string) *http.Server {
 	serveMux := http.NewServeMux()
 
 	serveMux.HandleFunc("/", s.configHandler)
+	serveMux.HandleFunc("/save-config", s.saveConfigHandler)
 
 	return &http.Server{
 		Addr:    addr,
