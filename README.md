@@ -6,6 +6,7 @@ A simple yet powerful VoIP application for embedded systems. Primarily designed 
 
 - Inbound and outbound calling
 - Single active call handling (gracefully rejects concurrent callers)
+- Physical call control: use dedicated hardware buttons to answer, reject/hang up, and redial the last number
 - Concurrent web interface for advanced configuration
 - ...
 
