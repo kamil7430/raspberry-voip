@@ -1,11 +1,23 @@
 package handlers
 
-import "net/http"
+import (
+	"net/http"
 
-func NewServer(addr string) *http.Server {
+	"github.com/kamil7430/raspberry-voip/internal/state"
+)
+
+type server struct {
+	state *state.State
+}
+
+func NewHttpServer(state *state.State, addr string) *http.Server {
+	s := server{
+		state,
+	}
+
 	serveMux := http.NewServeMux()
 
-	serveMux.HandleFunc("/", configHandler)
+	serveMux.HandleFunc("/", s.configHandler)
 
 	return &http.Server{
 		Addr:    addr,

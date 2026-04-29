@@ -1,8 +1,15 @@
 package main
 
-import "log"
+import (
+	"log"
+
+	"github.com/kamil7430/raspberry-voip/internal/state"
+)
 
 func main() {
 	log.Println("Starting RPi VoIP!")
-	runHttpServer() // will be a go routine
+
+	s := state.State{}
+
+	runHttpServer(&s) // will be a go routine
 }
