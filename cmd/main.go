@@ -1,26 +1,8 @@
 package main
 
-import (
-	"errors"
-	"log"
-	"net/http"
-
-	"github.com/kamil7430/raspberry-voip/internal/handlers"
-)
+import "log"
 
 func main() {
-	log.Println("Hello, World!")
+	log.Println("Starting RPi VoIP!")
 	runHttpServer() // will be a go routine
-}
-
-func runHttpServer() {
-	log.Println("Creating a web server instance...")
-	server := handlers.NewServer(":2137")
-	defer server.Close()
-
-	log.Println("Running the web server...")
-	err := server.ListenAndServe()
-	if !errors.Is(err, http.ErrServerClosed) {
-		log.Fatal(err)
-	}
 }

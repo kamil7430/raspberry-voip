@@ -22,14 +22,14 @@ Building for the host machine:
 
 ```bash
 # From the project root
-go build 
+go build -o voip-telephony ./cmd
 ```
 
 Cross compilation:
 
 ```bash
 # Adjust the environment variables to fit your target architecture
-GOOS=linux GOARCH=arm64 go build
+GOOS=linux GOARCH=arm64 go build -o voip-telephony ./cmd
 ```
 <!---
 ## Hardware Wiring
