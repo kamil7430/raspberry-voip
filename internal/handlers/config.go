@@ -21,7 +21,7 @@ func (s *server) configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageData := configPageData{
-		s.state.GetDisplayName(),
+		DisplayName: s.state.GetDisplayName(),
 	}
 
 	err := web.Templates.ExecuteTemplate(w, "config.html", pageData)
@@ -60,14 +60,21 @@ func (s *server) showVerificationCode(w http.ResponseWriter, r *http.Request) {
 	s.lastShowVerificationCodeRequestMutex.Lock()
 	defer s.lastShowVerificationCodeRequestMutex.Unlock()
 
-	if s.lastShowVerificationCodeRequest.Add(showVerificationCodeTimeout).After(time.Now()) {
+	timeNow := time.Now()
+
+	if s.lastShowVerificationCodeRequest.Add(showVerificationCodeTimeout).After(timeNow) {
 		http.Error(w, "Nowe żądanie wysłane zbyt szybko", http.StatusTooManyRequests)
 		return
 	}
 
-	// TODO: show the code on lcd
+	select {
+	case s.display.ShowVerificationCodeChan <- timeNow:
+		log.Println("Sent verification code show request to display")
+	default:
+		log.Fatal("The channel is not empty!")
+	}
 
-	s.lastShowVerificationCodeRequest = time.Now()
+	s.lastShowVerificationCodeRequest = timeNow
 
 	w.WriteHeader(http.StatusOK)
 }

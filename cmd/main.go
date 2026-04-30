@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 )
 
@@ -10,6 +11,8 @@ func main() {
 	log.Println("Starting RPi VoIP!")
 
 	s := state.NewState()
+	d := display.NewDisplayController()
 
-	runHttpServer(&s) // will be a go routine
+	go runHttpServer(&s, &d)
+	runDisplayEventLoop(&d)
 }

@@ -5,18 +5,21 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 )
 
 type server struct {
 	state                                *state.State
+	display                              *display.DisplayController
 	lastShowVerificationCodeRequest      time.Time
 	lastShowVerificationCodeRequestMutex sync.Mutex
 }
 
-func NewHttpServer(state *state.State, addr string) *http.Server {
+func NewHttpServer(state *state.State, addr string, d *display.DisplayController) *http.Server {
 	s := server{
 		state:                           state,
+		display:                         d,
 		lastShowVerificationCodeRequest: time.Now(),
 	}
 
