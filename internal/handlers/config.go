@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/web"
 )
 
@@ -68,7 +69,10 @@ func (s *server) showVerificationCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	select {
-	case s.display.ShowVerificationCodeChan <- timeNow:
+	case s.display.ShowVerificationCodeChan <- display.ShowVerificationCodeDetails{
+		Time: timeNow,
+		Code: "123456", // TODO !!!
+	}:
 		log.Println("Sent verification code show request to display")
 	default:
 		log.Fatal("The channel is not empty!")
