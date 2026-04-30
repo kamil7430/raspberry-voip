@@ -22,7 +22,7 @@ func NewHttpServer(state *state.State, addr string) *http.Server {
 
 	serveMux := http.NewServeMux()
 
-	serveMux.HandleFunc("/", s.configHandler)
+	serveMux.HandleFunc("/config", s.configHandler)
 	serveMux.HandleFunc("/save-config", s.saveConfigHandler)
 	serveMux.HandleFunc("/show-verification-code", s.showVerificationCode)
 

@@ -48,7 +48,7 @@ func (s *server) saveConfigHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	log.Printf("User changed display name: %s\n", displayName)
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/config", http.StatusSeeOther)
 }
 
 func (s *server) showVerificationCode(w http.ResponseWriter, r *http.Request) {
