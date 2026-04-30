@@ -3,9 +3,12 @@ package handlers
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/kamil7430/raspberry-voip/web"
 )
+
+const showVerificationCodeTimeout = 5 * time.Second
 
 type configPageData struct {
 	DisplayName string
@@ -46,4 +49,25 @@ func (s *server) saveConfigHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("User changed display name: %s\n", displayName)
 
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func (s *server) showVerificationCode(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Metoda niedozwolona", http.StatusMethodNotAllowed)
+		return
+	}
+
+	s.lastShowVerificationCodeRequestMutex.Lock()
+	defer s.lastShowVerificationCodeRequestMutex.Unlock()
+
+	if s.lastShowVerificationCodeRequest.Add(showVerificationCodeTimeout).After(time.Now()) {
+		http.Error(w, "Nowe żądanie wysłane zbyt szybko", http.StatusTooManyRequests)
+		return
+	}
+
+	// TODO: show the code on lcd
+
+	s.lastShowVerificationCodeRequest = time.Now()
+
+	w.WriteHeader(http.StatusOK)
 }
