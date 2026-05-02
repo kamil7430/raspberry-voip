@@ -41,8 +41,15 @@ func (s *server) saveConfigHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Błąd przetwarzania formularza", http.StatusBadRequest)
 	}
 
+	verificationCode := r.FormValue("verificationCode")
+	err := s.state.CheckAndConsumeVerificationCode(verificationCode)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	displayName := r.FormValue("displayName")
-	err := s.state.SetDisplayName(displayName)
+	err = s.state.SetDisplayName(displayName)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -71,7 +78,7 @@ func (s *server) showVerificationCode(w http.ResponseWriter, r *http.Request) {
 	select {
 	case s.display.ShowVerificationCodeChan <- display.ShowVerificationCodeDetails{
 		Time: timeNow,
-		Code: "123456", // TODO !!!
+		Code: s.state.CreateVerificationCode(),
 	}:
 		log.Println("Sent verification code show request to display")
 	default:
