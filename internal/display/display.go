@@ -119,8 +119,12 @@ func (c *DisplayController) EventLoop() {
 }
 
 func (c *DisplayController) redrawLoop() {
-	time.Sleep(time.Second)
-	c.RedrawingRequestChan <- &RedrawingRequestDetails{}
+	rrd := RedrawingRequestDetails{}
+
+	for {
+		time.Sleep(time.Second)
+		c.RedrawingRequestChan <- &rrd
+	}
 }
 
 func (c *DisplayController) showMsg(text string, line hd44780.ShowOptions) {
