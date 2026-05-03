@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	i2cAddress   = 0x27
-	i2cBus       = 1
-	displayWidth = 16
+	i2cAddress                  = 0x27
+	i2cBus                      = 1
+	displayWidth                = 16
+	verificationCodeShowingTime = 5 * time.Second
+	callFinishedShowingTime     = 3 * time.Second
 )
 
 type DisplayController struct {
@@ -21,6 +23,7 @@ type DisplayController struct {
 	IncomingCallChan         chan *IncomingCallDetails
 	InCallChan               chan *InCallDetails
 	CallFinishedChan         chan *CallFinishedDetails
+	RedrawingRequestChan     chan *RedrawingRequestDetails
 	lcd                      *hd44780.Lcd
 }
 
@@ -38,7 +41,11 @@ type InCallDetails struct {
 	CallStart   time.Time
 }
 
-type CallFinishedDetails struct{}
+type CallFinishedDetails struct {
+	Time time.Time
+}
+
+type RedrawingRequestDetails struct{}
 
 func NewDisplayController() DisplayController {
 	// TODO: i2c connection leak -- no Close invocation
@@ -61,6 +68,7 @@ func NewDisplayController() DisplayController {
 		IncomingCallChan:         make(chan *IncomingCallDetails, 1),
 		InCallChan:               make(chan *InCallDetails, 1),
 		CallFinishedChan:         make(chan *CallFinishedDetails, 1),
+		RedrawingRequestChan:     make(chan *RedrawingRequestDetails, 1),
 		lcd:                      lcd,
 	}
 }
@@ -70,6 +78,9 @@ func (c *DisplayController) EventLoop() {
 	var icc *IncomingCallDetails
 	var ic *InCallDetails
 	var cf *CallFinishedDetails
+	var rr *RedrawingRequestDetails
+
+	go c.redrawLoop()
 
 	for {
 		// blocking receive from channels
@@ -82,22 +93,34 @@ func (c *DisplayController) EventLoop() {
 		case cf = <-c.CallFinishedChan:
 			icc = nil
 			ic = nil
+		case rr = <-c.RedrawingRequestChan:
 		}
 
-		// TODO: redraw the screen every second during call
-		// TODO: timeout the verification code showing
-		// probably should use a go routine
-
 		if svc != nil {
-			c.drawSvc(svc, icc, ic)
+			if time.Now().After(svc.Time.Add(verificationCodeShowingTime)) {
+				svc = nil
+			} else {
+				c.drawSvc(svc, icc, ic)
+			}
 		} else if icc != nil {
 			c.drawIcc(icc)
 		} else if ic != nil {
 			c.drawIc(ic)
 		} else if cf != nil {
-			c.drawCf(cf)
+			if time.Now().After(cf.Time.Add(callFinishedShowingTime)) {
+				cf = nil
+			} else {
+				c.drawCf(cf)
+			}
+		} else {
+			c.drawDefaultMsg()
 		}
 	}
+}
+
+func (c *DisplayController) redrawLoop() {
+	time.Sleep(time.Second)
+	c.RedrawingRequestChan <- &RedrawingRequestDetails{}
 }
 
 func (c *DisplayController) showMsg(text string, line hd44780.ShowOptions) {
@@ -152,6 +175,11 @@ func (c *DisplayController) drawIc(ic *InCallDetails) {
 func (c *DisplayController) drawCf(cf *CallFinishedDetails) {
 	c.showMsg(center("Call"), hd44780.SHOW_LINE_1)
 	c.showMsg(center("Finished"), hd44780.SHOW_LINE_2)
+}
+
+func (c *DisplayController) drawDefaultMsg() {
+	c.showMsg(center("VoIP Telephony"), hd44780.SHOW_LINE_1)
+	c.showMsg(center("Idle"), hd44780.SHOW_LINE_2)
 }
 
 func center(text string) string {
