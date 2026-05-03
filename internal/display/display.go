@@ -17,10 +17,10 @@ const (
 )
 
 type DisplayController struct {
-	ShowVerificationCodeChan chan ShowVerificationCodeDetails
-	IncomingCallChan         chan IncomingCallDetails
-	InCallChan               chan InCallDetails
-	CallFinishedChan         chan CallFinishedDetails
+	ShowVerificationCodeChan chan *ShowVerificationCodeDetails
+	IncomingCallChan         chan *IncomingCallDetails
+	InCallChan               chan *InCallDetails
+	CallFinishedChan         chan *CallFinishedDetails
 	lcd                      *hd44780.Lcd
 }
 
@@ -57,10 +57,10 @@ func NewDisplayController() DisplayController {
 	}
 
 	return DisplayController{
-		ShowVerificationCodeChan: make(chan ShowVerificationCodeDetails, 1),
-		IncomingCallChan:         make(chan IncomingCallDetails, 1),
-		InCallChan:               make(chan InCallDetails, 1),
-		CallFinishedChan:         make(chan CallFinishedDetails, 1),
+		ShowVerificationCodeChan: make(chan *ShowVerificationCodeDetails, 1),
+		IncomingCallChan:         make(chan *IncomingCallDetails, 1),
+		InCallChan:               make(chan *InCallDetails, 1),
+		CallFinishedChan:         make(chan *CallFinishedDetails, 1),
 		lcd:                      lcd,
 	}
 }

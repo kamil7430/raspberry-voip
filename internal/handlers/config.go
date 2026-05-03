@@ -76,7 +76,7 @@ func (s *server) showVerificationCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	select {
-	case s.display.ShowVerificationCodeChan <- display.ShowVerificationCodeDetails{
+	case s.display.ShowVerificationCodeChan <- &display.ShowVerificationCodeDetails{
 		Time: timeNow,
 		Code: s.state.CreateVerificationCode(),
 	}:
