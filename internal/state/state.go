@@ -1,6 +1,7 @@
 package state
 
 import (
+	"context"
 	"crypto/rand"
 	"errors"
 	"log"
@@ -16,16 +17,21 @@ const (
 
 // State is a state struct providing concurrent-safe getters and setters (using mutexes).
 type State struct {
-	displayName           string
-	displayNameMutex      sync.Mutex
-	verificationCode      *string
-	verificationCodeMutex sync.Mutex
+	displayName                 string
+	displayNameMutex            sync.Mutex
+	verificationCode            *string
+	verificationCodeMutex       sync.Mutex
+	connectionContext           context.Context
+	connectionContextCancelFunc context.CancelFunc
+	connectionContextMutex      sync.Mutex
 }
 
 func NewState() State {
 	return State{
-		displayName:      "DefaultUser",
-		verificationCode: nil,
+		displayName:                 "DefaultUser",
+		verificationCode:            nil,
+		connectionContext:           nil,
+		connectionContextCancelFunc: nil,
 	}
 }
 
@@ -86,4 +92,36 @@ func (s *State) CreateVerificationCode() string {
 	}
 
 	return *s.verificationCode
+}
+
+// GetConnectionContext should not be used for checking whether the context is nil.
+// Use TrySetConnectionContext instead.
+func (s *State) GetConnectionContext() context.Context {
+	s.connectionContextMutex.Lock()
+	defer s.connectionContextMutex.Unlock()
+
+	return s.connectionContext
+}
+
+// TrySetConnectionContext atomically checks whether the connection context is nil. If it is, sets the connection
+// context to the provided argument. Returns the boolean value that indicates whether the connection context was set.
+func (s *State) TrySetConnectionContext(ctx context.Context, cancelFun context.CancelFunc) bool {
+	s.connectionContextMutex.Lock()
+	defer s.connectionContextMutex.Unlock()
+
+	if s.connectionContext != nil {
+		return false
+	}
+
+	s.connectionContext = ctx
+	s.connectionContextCancelFunc = cancelFun
+	return true
+}
+
+func (s *State) TerminateConnection() {
+	s.connectionContextMutex.Lock()
+	defer s.connectionContextMutex.Unlock()
+
+	s.connectionContextCancelFunc()
+	s.connectionContext = nil
 }
