@@ -6,5 +6,9 @@ github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22 h1:nO+SY4KOMsF/LsZ5
 github.com/d2r2/go-logger v0.0.0-20210606094344-60e9d1233e22/go.mod h1:eSx+YfcVy5vCjRZBNIhpIpfCGFMQ6XSOSQkDk7+VCpg=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/gen2brain/alsa v0.5.0 h1:5n4wpslg28Gr2iUL/lYYSQcn4ITvssF1sLmotoyLj5k=
+github.com/gen2brain/alsa v0.5.0/go.mod h1:7+LNiORvvXA+SP2qs4JNVFKwoadL5DDFMOb+e2mEgrY=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 h1:lDH9UUVJtmYCjyT0CI4q8xvlXPxeZ0gYCVvWbmPlp88=
 github.com/op/go-logging v0.0.0-20160315200505-970db520ece7/go.mod h1:HzydrMdWErDVzsI23lYNej1Htcns9BCg93Dk0bBINWk=
+golang.org/x/sys v0.35.0 h1:vz1N37gP5bs89s7He8XuIYXpyY0+QlsKmzipCbUtyxI=
+golang.org/x/sys v0.35.0/go.mod h1:BJP2sWEmIv4KK5OTEluFJCKSidICx8ciO85XgH3Ak8k=
