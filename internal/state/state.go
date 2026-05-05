@@ -1,8 +1,10 @@
 package state
 
 import (
+	"crypto/rand"
 	"errors"
-	"math/rand"
+	"log"
+	"math/big"
 	"strconv"
 	"sync"
 )
@@ -75,7 +77,12 @@ func (s *State) CreateVerificationCode() string {
 	defer s.verificationCodeMutex.Unlock()
 
 	if s.verificationCode == nil {
-		s.verificationCode = new(strconv.Itoa(rand.Intn(maxCodeValue-minCodeValue) + minCodeValue))
+		code, err := rand.Int(rand.Reader, big.NewInt(maxCodeValue-minCodeValue+1))
+		if err != nil {
+			log.Fatal(err)
+		}
+		codeString := strconv.Itoa(int(code.Int64() + minCodeValue))
+		s.verificationCode = &codeString
 	}
 
 	return *s.verificationCode
