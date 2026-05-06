@@ -198,7 +198,7 @@ func (c *DisplayController) drawIc(ic *InCallDetails) {
 
 func (c *DisplayController) drawCf(cf *CallFinishedDetails) {
 	c.showMsg(center("Call Finished"), hd44780.SHOW_LINE_1)
-	c.showMsg(center(), hd44780.SHOW_LINE_2)
+	c.showMsg(center(cf.Reason), hd44780.SHOW_LINE_2)
 }
 
 func (c *DisplayController) drawDefaultMsg() {
