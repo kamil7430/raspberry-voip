@@ -7,11 +7,12 @@ import (
 	"net"
 	"time"
 
+	"github.com/kamil7430/raspberry-voip/internal/audio"
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 )
 
-func Dial(addr string, state *state.State, d *display.DisplayController) error {
+func Dial(addr string, state *state.State, d *display.DisplayController, a *audio.AudioHandler) error {
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
@@ -74,8 +75,8 @@ func Dial(addr string, state *state.State, d *display.DisplayController) error {
 			}
 			return nil
 		default:
-			receive(conn)
-			send(conn)
+			receiveAndPlay(conn, a)
+			sendFromAudioBuffer(conn, a)
 		}
 	}
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/kamil7430/raspberry-voip/internal/audio"
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 )
@@ -12,7 +13,9 @@ func main() {
 
 	s := state.NewState()
 	d := display.NewDisplayController()
+	a := audio.NewAudioHandler(0, 0, 0, 0) // TODO: correct?
 
 	go runHttpServer(s, d)
-	runDisplayEventLoop(d)
+	go runDisplayEventLoop(d)
+	runListener(s, d, a)
 }

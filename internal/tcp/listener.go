@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/kamil7430/raspberry-voip/internal/audio"
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 )
@@ -16,12 +17,14 @@ const listenerAddr = ":8080"
 type Listener struct {
 	state   *state.State
 	display *display.DisplayController
+	audio   *audio.AudioHandler
 }
 
-func NewListener(state *state.State, d *display.DisplayController) Listener {
+func NewListener(state *state.State, d *display.DisplayController, a *audio.AudioHandler) Listener {
 	return Listener{
 		state:   state,
 		display: d,
+		audio:   a,
 	}
 }
 
@@ -47,6 +50,8 @@ func (l *Listener) Listen() {
 }
 
 func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
+	defer conn.Close()
+
 	// our handshake with dialer
 	buffer := make([]byte, bufferSize)
 	_, err := conn.Read(buffer)
@@ -101,11 +106,10 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 				Time:   time.Now(),
 				Reason: "Disconnected",
 			}
-			conn.Close()
 			return
 		default:
-			send(conn)
-			receive(conn)
+			sendFromAudioBuffer(conn, l.audio)
+			receiveAndPlay(conn, l.audio)
 		}
 	}
 }
