@@ -17,7 +17,7 @@ listenerAddr=:8080
 
 ; IO settings
 chipPath=/dev/gpiochip0
-answerGpioPin=18
+answerGpioPin=18 ; this is also used to dial the saved number!
 rejectGpioPin=25
 i2cAddress=39 ; decimal version of 0x27
 i2cBus=1
