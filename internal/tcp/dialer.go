@@ -21,7 +21,7 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	if !state.TrySetConnectionContext(ctx, cancelFunc) {
-		log.Fatal("couldn't set connection context")
+		return err
 	}
 	defer state.TerminateConnection()
 
