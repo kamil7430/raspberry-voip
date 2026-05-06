@@ -8,6 +8,7 @@ import (
 	"math/big"
 	"strconv"
 	"sync"
+	"time"
 )
 
 const (
@@ -26,6 +27,8 @@ type State struct {
 	connectionContext           context.Context
 	connectionContextCancelFunc context.CancelFunc
 	connectionContextMutex      sync.Mutex
+	AnswerButtonClickChan       chan time.Time
+	RejectButtonClickChan       chan time.Time
 }
 
 func NewState() *State {
@@ -35,6 +38,8 @@ func NewState() *State {
 		verificationCode:            nil,
 		connectionContext:           nil,
 		connectionContextCancelFunc: nil,
+		AnswerButtonClickChan:       make(chan time.Time),
+		RejectButtonClickChan:       make(chan time.Time),
 	}
 }
 

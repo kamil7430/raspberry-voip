@@ -48,14 +48,50 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 	// wait for pickup
 	timeoutTicker := time.NewTicker(dialingTime)
 	defer timeoutTicker.Stop()
-	select {
-	case <-timeoutTicker.C:
-		d.CallFinishedChan <- &display.CallFinishedDetails{
-			Time:   time.Now(),
-			Reason: "Dial timeout",
+
+	answeredChan := make(chan bool)
+	go func() {
+		var answer callAnswerMessage
+		err := json.NewDecoder(conn).Decode(&answer)
+		if err != nil {
+			log.Println("Error decoding answer")
 		}
-		return nil
-		// TODO: case reject button clicked
+		answeredChan <- answer.Answered
+	}()
+
+	shouldProceed := false
+	for !shouldProceed {
+		select {
+		case <-timeoutTicker.C:
+			d.CallFinishedChan <- &display.CallFinishedDetails{
+				Time:   time.Now(),
+				Reason: "Dial timeout",
+			}
+			return nil
+		case clickTime := <-state.RejectButtonClickChan:
+			if clickTime.Add(500 * time.Millisecond).After(time.Now()) {
+				d.CallFinishedChan <- &display.CallFinishedDetails{
+					Time:   time.Now(),
+					Reason: "Dial cancelled",
+				}
+				return nil
+			}
+		case answer := <-answeredChan:
+			if answer {
+				shouldProceed = true
+			} else {
+				d.CallFinishedChan <- &display.CallFinishedDetails{
+					Time:   time.Now(),
+					Reason: "Dial rejected",
+				}
+				return nil
+			}
+		}
+	}
+
+	d.InCallChan <- &display.InCallDetails{
+		DisplayName: displayName,
+		CallStart:   time.Now(),
 	}
 
 	// main call loop

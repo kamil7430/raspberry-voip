@@ -79,15 +79,40 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 	// wait for pickup
 	timeoutTicker := time.NewTicker(dialingTime)
 	defer timeoutTicker.Stop()
-	select {
-	case <-timeoutTicker.C:
-		l.display.CallFinishedChan <- &display.CallFinishedDetails{
-			Time:   time.Now(),
-			Reason: "Dial timeout",
+	shouldProceed := false
+	for !shouldProceed {
+		select {
+		case <-timeoutTicker.C:
+			l.display.CallFinishedChan <- &display.CallFinishedDetails{
+				Time:   time.Now(),
+				Reason: "Call timeout",
+			}
+			return
+		case clickTime := <-l.state.RejectButtonClickChan:
+			if clickTime.Add(500 * time.Millisecond).After(time.Now()) {
+				l.display.CallFinishedChan <- &display.CallFinishedDetails{
+					Time:   time.Now(),
+					Reason: "Call rejected",
+				}
+				return
+			}
+		case clickTime := <-l.state.AnswerButtonClickChan:
+			if clickTime.Add(500 * time.Millisecond).After(time.Now()) {
+				err := json.NewEncoder(conn).Encode(&callAnswerMessage{
+					Answered: true,
+				})
+				if err != nil {
+					log.Println("Error encoding answer")
+					return
+				}
+				shouldProceed = true
+			}
 		}
-		return
-		// TODO: case reject button clicked
-		// TODO: case accept button clicked
+	}
+
+	l.display.InCallChan <- &display.InCallDetails{
+		DisplayName: displayName,
+		CallStart:   time.Now(),
 	}
 
 	// main call loop

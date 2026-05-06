@@ -2,6 +2,7 @@ package buttons
 
 import (
 	"log"
+	"time"
 
 	"github.com/kamil7430/raspberry-voip/internal/state"
 )
@@ -27,23 +28,25 @@ func NewConcreteButtonHandler(s *state.State) *ConcreteButtonHandler {
 		log.Fatal("could not create chip button handler")
 	}
 
-	handler.OnAnswer = onAnswer
-	handler.OnReject = onReject
-
-	return &ConcreteButtonHandler{
+	concreteHandler := ConcreteButtonHandler{
 		handler: handler,
 		state:   s,
 	}
+
+	handler.OnAnswer = concreteHandler.onAnswer
+	handler.OnReject = concreteHandler.onReject
+
+	return &concreteHandler
 }
 
 func (h *ConcreteButtonHandler) Start() {
 	h.handler.Start()
 }
 
-func onAnswer() {
-
+func (h *ConcreteButtonHandler) onAnswer() {
+	h.state.AnswerButtonClickChan <- time.Now()
 }
 
-func onReject() {
-
+func (h *ConcreteButtonHandler) onReject() {
+	h.state.RejectButtonClickChan <- time.Now()
 }
