@@ -46,6 +46,7 @@ func (l *Listener) Listen() {
 }
 
 func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
+	// our handshake with dialer
 	buffer := make([]byte, bufferSize)
 	_, err := conn.Read(buffer)
 	if err != nil {
@@ -77,8 +78,10 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 		DisplayName: displayName,
 	}
 
-	// TODO: wait for pickup
+	// wait for pickup
+	// TODO
 
+	// main call loop
 	for {
 		select {
 		case <-ctx.Done():
@@ -86,8 +89,8 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 			conn.Close()
 			return
 		default:
-			send()
-			receive()
+			send(conn)
+			receive(conn)
 		}
 	}
 }

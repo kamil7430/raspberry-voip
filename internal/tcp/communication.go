@@ -1,7 +1,9 @@
 package tcp
 
+import "net"
+
 const bufferSize = 8196
 
-func receive() {}
+func receive(conn net.Conn) {}
 
-func send() {}
+func send(conn net.Conn) {}

@@ -22,6 +22,7 @@ func Dial(addr string, state *state.State, d *display.DisplayController) error {
 		log.Fatal("couldn't set connection context")
 	}
 
+	// our handshake with listener
 	helloJson, err := json.Marshal(helloMessage{
 		DisplayName: state.GetDisplayName(),
 	})
@@ -49,16 +50,18 @@ func Dial(addr string, state *state.State, d *display.DisplayController) error {
 		DisplayName: displayName,
 	}
 
-	// TODO: wait for pickup
+	// wait for pickup
+	// TODO
 
+	// main call loop
 	for {
 		select {
 		case <-ctx.Done():
 			d.CallFinishedChan <- &display.CallFinishedDetails{}
 			return nil
 		default:
-			receive()
-			send()
+			receive(conn)
+			send(conn)
 		}
 	}
 }
