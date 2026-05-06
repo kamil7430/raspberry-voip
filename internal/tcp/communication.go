@@ -2,11 +2,13 @@ package tcp
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 	"time"
 
 	"github.com/kamil7430/raspberry-voip/internal/audio"
+	"github.com/kamil7430/raspberry-voip/internal/state"
 )
 
 const (
@@ -53,4 +55,26 @@ func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler, ctx context.C
 			}
 		}
 	}
+}
+
+func handleRejectButtonClick(conn net.Conn, state *state.State, ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case clickTime := <-state.RejectButtonClickChan:
+			if clickTime.Add(500 * time.Millisecond).After(time.Now()) {
+				_ = json.NewEncoder(conn).Encode(&finishCallMessage{Rejected: true})
+				state.TerminateConnection()
+			}
+		}
+	}
+}
+
+func listenForCallFinish(conn net.Conn, state *state.State) {
+	err := json.NewDecoder(conn).Decode(&finishCallMessage{})
+	if err != nil {
+		log.Println(err)
+	}
+	state.TerminateConnection()
 }

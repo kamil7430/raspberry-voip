@@ -7,3 +7,7 @@ type helloMessage struct {
 type callAnswerMessage struct {
 	Answered bool
 }
+
+type finishCallMessage struct {
+	Rejected bool
+}

@@ -118,6 +118,8 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 	// main call loop
 	go sendFromAudioBuffer(conn, l.audio, ctx)
 	go receiveAndPlay(conn, l.audio, ctx)
+	go handleRejectButtonClick(conn, l.state, ctx)
+	go listenForCallFinish(conn, l.state)
 
 	<-ctx.Done()
 
