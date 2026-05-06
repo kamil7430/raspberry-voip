@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 
@@ -45,6 +46,39 @@ func (l *Listener) Listen() {
 }
 
 func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
+	buffer := make([]byte, bufferSize)
+	_, err := conn.Read(buffer)
+	if err != nil {
+		log.Printf("Error reading from connection: %s\n", err)
+		return
+	}
+	var helloReceived helloMessage
+	err = json.Unmarshal(buffer, &helloReceived)
+	if err != nil {
+		log.Printf("Error unmarshalling the hello message: %s\n", err)
+		return
+	}
+	displayName := helloReceived.DisplayName
+
+	helloJson, err := json.Marshal(helloMessage{
+		DisplayName: l.state.GetDisplayName(),
+	})
+	if err != nil {
+		log.Printf("Error marshalling hello message: %s\n", err)
+		return
+	}
+	_, err = conn.Write(helloJson)
+	if err != nil {
+		log.Printf("Error sending hello message: %s\n", err)
+		return
+	}
+
+	l.display.IncomingCallChan <- &display.IncomingCallDetails{
+		DisplayName: displayName,
+	}
+
+	// TODO: wait for pickup
+
 	for {
 		select {
 		case <-ctx.Done():

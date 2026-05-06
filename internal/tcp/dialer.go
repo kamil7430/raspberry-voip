@@ -2,6 +2,7 @@ package tcp
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 
@@ -21,7 +22,34 @@ func Dial(addr string, state *state.State, d *display.DisplayController) error {
 		log.Fatal("couldn't set connection context")
 	}
 
-	// TODO: dialing -- waiting for pick up
+	helloJson, err := json.Marshal(helloMessage{
+		DisplayName: state.GetDisplayName(),
+	})
+	if err != nil {
+		return err
+	}
+	_, err = conn.Write(helloJson)
+	if err != nil {
+		return err
+	}
+
+	buffer := make([]byte, bufferSize)
+	_, err = conn.Read(buffer)
+	if err != nil {
+		return err
+	}
+	var helloReceived helloMessage
+	err = json.Unmarshal(buffer, &helloReceived)
+	if err != nil {
+		return err
+	}
+	displayName := helloReceived.DisplayName
+
+	d.DialingChan <- &display.DialingDetails{
+		DisplayName: displayName,
+	}
+
+	// TODO: wait for pickup
 
 	for {
 		select {
