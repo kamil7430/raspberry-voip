@@ -12,7 +12,8 @@ import (
 const showVerificationCodeTimeout = 5 * time.Second
 
 type configPageData struct {
-	DisplayName string
+	DisplayName    string
+	DialingAddress string
 }
 
 func (s *server) configHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +23,8 @@ func (s *server) configHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageData := configPageData{
-		DisplayName: s.state.GetDisplayName(),
+		DisplayName:    s.state.GetDisplayName(),
+		DialingAddress: s.state.GetDialingAddress(),
 	}
 
 	err := web.Templates.ExecuteTemplate(w, "config.html", pageData)
@@ -55,6 +57,14 @@ func (s *server) saveConfigHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	log.Printf("User changed display name: %s\n", displayName)
+
+	dialingAddress := r.FormValue("dialingAddress")
+	err = s.state.SetDialingAddress(dialingAddress)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	log.Printf("User changed dialing address: %s\n", dialingAddress)
 
 	http.Redirect(w, r, "/config", http.StatusSeeOther)
 }

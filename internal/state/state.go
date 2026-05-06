@@ -19,6 +19,8 @@ const (
 type State struct {
 	displayName                 string
 	displayNameMutex            sync.Mutex
+	dialingAddress              string
+	dialingAddressMutex         sync.Mutex
 	verificationCode            *string
 	verificationCodeMutex       sync.Mutex
 	connectionContext           context.Context
@@ -29,6 +31,7 @@ type State struct {
 func NewState() *State {
 	return &State{
 		displayName:                 "DefaultUser",
+		dialingAddress:              "localhost:8080",
 		verificationCode:            nil,
 		connectionContext:           nil,
 		connectionContextCancelFunc: nil,
@@ -54,6 +57,25 @@ func (s *State) SetDisplayName(displayName string) error {
 	defer s.displayNameMutex.Unlock()
 
 	s.displayName = displayName
+	return nil
+}
+
+func (s *State) GetDialingAddress() string {
+	s.dialingAddressMutex.Lock()
+	defer s.dialingAddressMutex.Unlock()
+
+	return s.dialingAddress
+}
+
+func (s *State) SetDialingAddress(address string) error {
+	if len(address) <= 0 {
+		return errors.New("address is empty")
+	}
+
+	s.dialingAddressMutex.Lock()
+	defer s.dialingAddressMutex.Unlock()
+
+	s.dialingAddress = address
 	return nil
 }
 

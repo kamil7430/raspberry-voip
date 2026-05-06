@@ -135,6 +135,12 @@
         </div>
 
         <div class="form-group">
+            <label for="dialingAddress">Adres do połączenia</label>
+            <input type="text" id="dialingAddress" name="dialingAddress" value="{{ .DialingAddress }}" required>
+            <div class="help-text">Pamiętaj o podaniu portu.</div>
+        </div>
+
+        <div class="form-group">
             <label for="verificationCode">Kod weryfikacyjny</label>
             <input type="password" id="verificationCode" name="verificationCode" placeholder="np. 123456" required>
             <div class="help-text">
