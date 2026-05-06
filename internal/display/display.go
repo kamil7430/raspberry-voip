@@ -86,7 +86,6 @@ func (c *DisplayController) EventLoop() {
 	var icc *IncomingCallDetails
 	var ic *InCallDetails
 	var cf *CallFinishedDetails
-	var rr *RedrawingRequestDetails
 
 	go c.redrawLoop()
 
@@ -104,7 +103,7 @@ func (c *DisplayController) EventLoop() {
 			d = nil
 			icc = nil
 			ic = nil
-		case rr = <-c.RedrawingRequestChan:
+		case <-c.RedrawingRequestChan:
 		}
 
 		if svc != nil {
