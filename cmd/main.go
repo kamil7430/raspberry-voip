@@ -13,6 +13,6 @@ func main() {
 	s := state.NewState()
 	d := display.NewDisplayController()
 
-	go runHttpServer(&s, &d)
-	runDisplayEventLoop(&d)
+	go runHttpServer(s, d)
+	runDisplayEventLoop(d)
 }

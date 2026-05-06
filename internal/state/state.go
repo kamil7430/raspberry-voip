@@ -26,8 +26,8 @@ type State struct {
 	connectionContextMutex      sync.Mutex
 }
 
-func NewState() State {
-	return State{
+func NewState() *State {
+	return &State{
 		displayName:                 "DefaultUser",
 		verificationCode:            nil,
 		connectionContext:           nil,

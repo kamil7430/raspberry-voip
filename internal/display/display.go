@@ -53,7 +53,7 @@ type CallFinishedDetails struct {
 
 type RedrawingRequestDetails struct{}
 
-func NewDisplayController() DisplayController {
+func NewDisplayController() *DisplayController {
 	// TODO: i2c connection leak -- no Close invocation
 	i2cConn, err := i2c.NewI2C(i2cAddress, i2cBus)
 	if err != nil {
@@ -69,7 +69,7 @@ func NewDisplayController() DisplayController {
 		log.Fatal(err)
 	}
 
-	return DisplayController{
+	return &DisplayController{
 		ShowVerificationCodeChan: make(chan *ShowVerificationCodeDetails, 1),
 		DialingChan:              make(chan *DialingDetails, 1),
 		IncomingCallChan:         make(chan *IncomingCallDetails, 1),
