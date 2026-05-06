@@ -34,7 +34,7 @@ func New(chipPath string, answerOffset, rejectOffset int) *NewButtonHandler {
 		chip:             chip,
 		answerOffset:     answerOffset,
 		rejectOffset:     rejectOffset,
-		debounceDuration: 250 * time.Millisecond,
+		debounceDuration: 20 * time.Millisecond,
 	}
 }
 

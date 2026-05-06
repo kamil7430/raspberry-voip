@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/kamil7430/raspberry-voip/internal/audio"
+	"github.com/kamil7430/raspberry-voip/internal/buttons"
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/handlers"
 	"github.com/kamil7430/raspberry-voip/internal/state"
@@ -35,4 +36,10 @@ func runListener(s *state.State, d *display.DisplayController, a *audio.AudioHan
 	log.Println("Starting tcp listener...")
 	listener := tcp.NewListener(s, d, a)
 	listener.Listen()
+}
+
+func runButtonHandler(s *state.State) {
+	log.Println("Starting button handler...")
+	buttonHandler := buttons.NewConcreteButtonHandler(s)
+	buttonHandler.Start()
 }
