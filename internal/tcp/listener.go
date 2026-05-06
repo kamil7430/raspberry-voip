@@ -114,6 +114,7 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 		DisplayName: displayName,
 		CallStart:   time.Now(),
 	}
+	l.audio.Start(ctx)
 
 	// main call loop
 	go sendFromAudioBuffer(conn, l.audio, ctx)

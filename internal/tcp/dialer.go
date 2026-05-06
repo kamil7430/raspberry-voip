@@ -93,6 +93,7 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 		DisplayName: displayName,
 		CallStart:   time.Now(),
 	}
+	a.Start(ctx)
 
 	// main call loop
 	go receiveAndPlay(conn, a, ctx)

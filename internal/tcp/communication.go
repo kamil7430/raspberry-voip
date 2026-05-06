@@ -45,6 +45,7 @@ func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler, ctx context.C
 			return
 		case out, ok := <-audio.Out:
 			if !ok {
+				log.Println("audio channel closed")
 				return
 			}
 
