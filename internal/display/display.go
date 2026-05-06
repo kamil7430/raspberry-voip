@@ -20,6 +20,7 @@ const (
 
 type DisplayController struct {
 	ShowVerificationCodeChan chan *ShowVerificationCodeDetails
+	DialingChan              chan *DialingDetails
 	IncomingCallChan         chan *IncomingCallDetails
 	InCallChan               chan *InCallDetails
 	CallFinishedChan         chan *CallFinishedDetails
@@ -30,6 +31,10 @@ type DisplayController struct {
 type ShowVerificationCodeDetails struct {
 	Time time.Time
 	Code string
+}
+
+type DialingDetails struct {
+	DisplayName string
 }
 
 type IncomingCallDetails struct {
@@ -65,6 +70,7 @@ func NewDisplayController() DisplayController {
 
 	return DisplayController{
 		ShowVerificationCodeChan: make(chan *ShowVerificationCodeDetails, 1),
+		DialingChan:              make(chan *DialingDetails, 1),
 		IncomingCallChan:         make(chan *IncomingCallDetails, 1),
 		InCallChan:               make(chan *InCallDetails, 1),
 		CallFinishedChan:         make(chan *CallFinishedDetails, 1),
@@ -75,6 +81,7 @@ func NewDisplayController() DisplayController {
 
 func (c *DisplayController) EventLoop() {
 	var svc *ShowVerificationCodeDetails
+	var d *DialingDetails
 	var icc *IncomingCallDetails
 	var ic *InCallDetails
 	var cf *CallFinishedDetails
@@ -86,9 +93,11 @@ func (c *DisplayController) EventLoop() {
 		// blocking receive from channels
 		select {
 		case svc = <-c.ShowVerificationCodeChan:
+		case d = <-c.DialingChan:
 		case icc = <-c.IncomingCallChan:
 			ic = nil // ic and icc are exclusive
 		case ic = <-c.InCallChan:
+			d = nil
 			icc = nil // as above
 		case cf = <-c.CallFinishedChan:
 			icc = nil
@@ -100,8 +109,10 @@ func (c *DisplayController) EventLoop() {
 			if time.Now().After(svc.Time.Add(verificationCodeShowingTime)) {
 				svc = nil
 			} else {
-				c.drawSvc(svc, icc, ic)
+				c.drawSvc(svc, d, icc, ic)
 			}
+		} else if d != nil {
+			c.drawD(d)
 		} else if icc != nil {
 			c.drawIcc(icc)
 		} else if ic != nil {
@@ -141,9 +152,11 @@ func (c *DisplayController) showMsg(text string, line hd44780.ShowOptions) {
 	}
 }
 
-func (c *DisplayController) drawSvc(svc *ShowVerificationCodeDetails, icc *IncomingCallDetails, ic *InCallDetails) {
-	if icc != nil || ic != nil {
-		if icc != nil {
+func (c *DisplayController) drawSvc(svc *ShowVerificationCodeDetails, d *DialingDetails, icc *IncomingCallDetails, ic *InCallDetails) {
+	if d != nil || icc != nil || ic != nil {
+		if d != nil {
+			c.showMsg(center(d.DisplayName), hd44780.SHOW_LINE_1)
+		} else if icc != nil {
 			c.showMsg(center(icc.DisplayName), hd44780.SHOW_LINE_1)
 		} else {
 			c.showMsg(center(ic.DisplayName), hd44780.SHOW_LINE_1)
@@ -157,6 +170,11 @@ func (c *DisplayController) drawSvc(svc *ShowVerificationCodeDetails, icc *Incom
 		c.showMsg(center("Verify by Code:"), hd44780.SHOW_LINE_1) // 15 chars; "Verification Code" is 17 chars ;c
 		c.showMsg(center(svc.Code), hd44780.SHOW_LINE_2)
 	}
+}
+
+func (c *DisplayController) drawD(d *DialingDetails) {
+	c.showMsg(center("Dialing:"), hd44780.SHOW_LINE_1)
+	c.showMsg(center(d.DisplayName), hd44780.SHOW_LINE_2)
 }
 
 func (c *DisplayController) drawIcc(icc *IncomingCallDetails) {
