@@ -7,17 +7,20 @@ import (
 
 	"github.com/kamil7430/raspberry-voip/internal/audio"
 	"github.com/kamil7430/raspberry-voip/internal/buttons"
+	"github.com/kamil7430/raspberry-voip/internal/config"
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/handlers"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 	"github.com/kamil7430/raspberry-voip/internal/tcp"
 )
 
-const httpServerAddr = ":2137"
-
 func runHttpServer(state *state.State, d *display.DisplayController) {
 	log.Println("Creating a web server instance...")
-	server := handlers.NewHttpServer(state, httpServerAddr, d)
+	server := handlers.NewHttpServer(
+		state,
+		config.LoadString("httpServerAddr"),
+		d,
+	)
 	defer server.Close()
 
 	log.Println("Running the web server...")

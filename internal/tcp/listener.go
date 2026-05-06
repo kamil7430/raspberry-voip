@@ -8,11 +8,10 @@ import (
 	"time"
 
 	"github.com/kamil7430/raspberry-voip/internal/audio"
+	"github.com/kamil7430/raspberry-voip/internal/config"
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 )
-
-const listenerAddr = ":8080"
 
 type Listener struct {
 	state   *state.State
@@ -29,7 +28,10 @@ func NewListener(state *state.State, d *display.DisplayController, a *audio.Audi
 }
 
 func (l *Listener) Listen() {
-	listener, err := net.Listen("tcp", listenerAddr)
+	listener, err := net.Listen(
+		"tcp",
+		config.LoadString("listenerAddr"),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}

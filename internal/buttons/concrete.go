@@ -5,15 +5,10 @@ import (
 	"time"
 
 	"github.com/kamil7430/raspberry-voip/internal/audio"
+	"github.com/kamil7430/raspberry-voip/internal/config"
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
 	"github.com/kamil7430/raspberry-voip/internal/tcp"
-)
-
-const (
-	chipPath      = "/dev/gpiochip0"
-	answerGpioPin = 18
-	rejectGpioPin = 25
 )
 
 type ConcreteButtonHandler struct {
@@ -25,9 +20,9 @@ type ConcreteButtonHandler struct {
 
 func NewConcreteButtonHandler(s *state.State, d *display.DisplayController, a *audio.AudioHandler) *ConcreteButtonHandler {
 	handler := New(
-		chipPath,
-		answerGpioPin,
-		rejectGpioPin,
+		config.LoadString("chipPath"),
+		config.LoadInt("answerGpioPin"),
+		config.LoadInt("rejectGpioPin"),
 	)
 	if handler == nil {
 		log.Fatal("could not create chip button handler")

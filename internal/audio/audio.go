@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gen2brain/alsa"
+	"github.com/kamil7430/raspberry-voip/internal/config"
 )
 
 type AudioHandler struct {
@@ -27,20 +28,20 @@ type AudioHandler struct {
 	cancel context.CancelFunc
 }
 
-func NewAudioHandler(capCard, capDev, playCard, playDev uint) *AudioHandler {
+func NewAudioHandler() *AudioHandler {
 	return &AudioHandler{
 		In:               make(chan []byte, 10),
 		Out:              make(chan []byte, 10),
-		CaptureCard:      capCard,
-		CaptureDevice:    capDev,
-		PlaybackCard:     playCard,
-		PlaybackDevice:   playDev,
-		SampleRate:       44100,
-		CaptureChannels:  1, // Capture in Mono
-		PlaybackChannels: 2, // Playback in Stereo
+		CaptureCard:      uint(config.LoadInt("captureCard")),
+		CaptureDevice:    uint(config.LoadInt("captureDevice")),
+		PlaybackCard:     uint(config.LoadInt("playbackCard")),
+		PlaybackDevice:   uint(config.LoadInt("playbackDevice")),
+		SampleRate:       uint32(config.LoadInt("sampleRate")),
+		CaptureChannels:  1, // capture in mono
+		PlaybackChannels: 2, // playback in stereo
 		Format:           alsa.SNDRV_PCM_FORMAT_S16_LE,
-		PeriodSize:       1024,
-		PeriodCount:      4,
+		PeriodSize:       uint32(config.LoadInt("periodSize")),
+		PeriodCount:      uint32(config.LoadInt("periodCount")),
 	}
 }
 
@@ -60,7 +61,7 @@ func (h *AudioHandler) Stop() {
 }
 
 func (h *AudioHandler) captureRoutine(ctx context.Context) {
-	config := &alsa.Config{
+	alsaConfig := &alsa.Config{
 		Channels:    h.CaptureChannels,
 		Rate:        h.SampleRate,
 		Format:      h.Format,
@@ -68,7 +69,7 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 		PeriodCount: h.PeriodCount,
 	}
 
-	p, err := alsa.PcmOpen(h.CaptureCard, h.CaptureDevice, alsa.PCM_IN, config)
+	p, err := alsa.PcmOpen(h.CaptureCard, h.CaptureDevice, alsa.PCM_IN, alsaConfig)
 	if err != nil {
 		log.Printf("Audio Capture Error: Failed to open PCM device (Card %d, Device %d): %v", h.CaptureCard, h.CaptureDevice, err)
 		return
@@ -77,7 +78,7 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 
 	log.Printf("Audio Capture Started: Card %d, Device %d (Mono)", h.CaptureCard, h.CaptureDevice)
 
-	bufferSize := alsa.PcmFramesToBytes(p, config.PeriodSize)
+	bufferSize := alsa.PcmFramesToBytes(p, alsaConfig.PeriodSize)
 
 	for {
 		select {
@@ -103,7 +104,7 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 }
 
 func (h *AudioHandler) playbackRoutine(ctx context.Context) {
-	config := &alsa.Config{
+	alsaConfig := &alsa.Config{
 		Channels:    h.PlaybackChannels,
 		Rate:        h.SampleRate,
 		Format:      h.Format,
@@ -111,7 +112,7 @@ func (h *AudioHandler) playbackRoutine(ctx context.Context) {
 		PeriodCount: h.PeriodCount,
 	}
 
-	p, err := alsa.PcmOpen(h.PlaybackCard, h.PlaybackDevice, alsa.PCM_OUT, config)
+	p, err := alsa.PcmOpen(h.PlaybackCard, h.PlaybackDevice, alsa.PCM_OUT, alsaConfig)
 	if err != nil {
 		log.Printf("Audio Playback Error: Failed to open PCM device (Card %d, Device %d): %v", h.PlaybackCard, h.PlaybackDevice, err)
 		return
@@ -127,7 +128,7 @@ func (h *AudioHandler) playbackRoutine(ctx context.Context) {
 			return
 		case monoData := <-h.In:
 			stereoData := monoToStereo(monoData)
-			
+
 			_, err := p.Write(stereoData)
 			log.Printf("Audio playback chunk")
 			if err != nil {
@@ -142,7 +143,7 @@ func monoToStereo(mono []byte) []byte {
 
 	for i := 0; i < len(mono); i += 2 {
 		if i+1 >= len(mono) {
-			break 
+			break
 		}
 
 		// Grab the 2 bytes making up the 16-bit mono sample

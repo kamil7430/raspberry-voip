@@ -9,11 +9,10 @@ import (
 	"github.com/d2r2/go-hd44780"
 	"github.com/d2r2/go-i2c"
 	"github.com/d2r2/go-logger"
+	"github.com/kamil7430/raspberry-voip/internal/config"
 )
 
 const (
-	i2cAddress                  = 0x27
-	i2cBus                      = 1
 	displayWidth                = 16
 	verificationCodeShowingTime = 5 * time.Second
 	callFinishedShowingTime     = 3 * time.Second
@@ -60,7 +59,10 @@ func NewDisplayController() *DisplayController {
 	if err != nil {
 		log.Fatal(err)
 	}
-	i2cConn, err := i2c.NewI2C(i2cAddress, i2cBus)
+	i2cConn, err := i2c.NewI2C(
+		uint8(config.LoadInt("i2cAddress")),
+		config.LoadInt("i2cBus"),
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
