@@ -28,8 +28,6 @@ func receiveAndPlay(conn net.Conn, audio *audio.AudioHandler, ctx context.Contex
 			return
 		}
 
-		audio.In <- receiveBuffer[:n]
-
 		select {
 		case <-ctx.Done():
 			return
@@ -43,12 +41,12 @@ func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler, ctx context.C
 		select {
 		case <-ctx.Done():
 			return
-		case in, ok := <-audio.In:
+		case out, ok := <-audio.Out:
 			if !ok {
 				return
 			}
 
-			_, err := conn.Write(in)
+			_, err := conn.Write(out)
 			if err != nil {
 				log.Printf("Error sending voice: %s\n", err)
 				return
