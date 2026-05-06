@@ -94,8 +94,8 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 			Reason: "Dial timeout",
 		}
 		return
-		// case reject button clicked
-		// case accept button clicked
+		// TODO: case reject button clicked
+		// TODO: case accept button clicked
 	}
 
 	// main call loop

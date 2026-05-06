@@ -62,7 +62,7 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 			Reason: "Dial timeout",
 		}
 		return nil
-		// case reject button clicked
+		// TODO: case reject button clicked
 	}
 
 	// main call loop
