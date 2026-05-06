@@ -24,6 +24,6 @@ func main() {
 
 	go runHttpServer(s, d)
 	go runDisplayEventLoop(d)
-	runButtonHandler(s)
+	runButtonHandler(s, d, a)
 	runListener(s, d, a)
 }

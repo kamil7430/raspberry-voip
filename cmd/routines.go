@@ -38,8 +38,8 @@ func runListener(s *state.State, d *display.DisplayController, a *audio.AudioHan
 	listener.Listen()
 }
 
-func runButtonHandler(s *state.State) {
+func runButtonHandler(s *state.State, d *display.DisplayController, a *audio.AudioHandler) {
 	log.Println("Starting button handler...")
-	buttonHandler := buttons.NewConcreteButtonHandler(s)
+	buttonHandler := buttons.NewConcreteButtonHandler(s, d, a)
 	buttonHandler.Start()
 }

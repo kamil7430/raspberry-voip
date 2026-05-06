@@ -4,7 +4,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/kamil7430/raspberry-voip/internal/audio"
+	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
+	"github.com/kamil7430/raspberry-voip/internal/tcp"
 )
 
 const (
@@ -16,9 +19,11 @@ const (
 type ConcreteButtonHandler struct {
 	handler *NewButtonHandler
 	state   *state.State
+	display *display.DisplayController
+	audio   *audio.AudioHandler
 }
 
-func NewConcreteButtonHandler(s *state.State) *ConcreteButtonHandler {
+func NewConcreteButtonHandler(s *state.State, d *display.DisplayController, a *audio.AudioHandler) *ConcreteButtonHandler {
 	handler := New(
 		chipPath,
 		answerGpioPin,
@@ -31,6 +36,8 @@ func NewConcreteButtonHandler(s *state.State) *ConcreteButtonHandler {
 	concreteHandler := ConcreteButtonHandler{
 		handler: handler,
 		state:   s,
+		display: d,
+		audio:   a,
 	}
 
 	handler.OnAnswer = concreteHandler.onAnswer
@@ -44,7 +51,16 @@ func (h *ConcreteButtonHandler) Start() {
 }
 
 func (h *ConcreteButtonHandler) onAnswer() {
-	h.state.AnswerButtonClickChan <- time.Now()
+	if h.state.GetConnectionContext() != nil {
+		h.state.AnswerButtonClickChan <- time.Now()
+	} else {
+		_ = tcp.Dial(
+			h.state.GetDialingAddress(),
+			h.state,
+			h.display,
+			h.audio,
+		)
+	}
 }
 
 func (h *ConcreteButtonHandler) onReject() {
