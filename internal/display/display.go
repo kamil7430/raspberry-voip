@@ -47,7 +47,8 @@ type InCallDetails struct {
 }
 
 type CallFinishedDetails struct {
-	Time time.Time
+	Time   time.Time
+	Reason string
 }
 
 type RedrawingRequestDetails struct{}
@@ -100,6 +101,7 @@ func (c *DisplayController) EventLoop() {
 			d = nil
 			icc = nil // as above
 		case cf = <-c.CallFinishedChan:
+			d = nil
 			icc = nil
 			ic = nil
 		case rr = <-c.RedrawingRequestChan:
@@ -195,8 +197,8 @@ func (c *DisplayController) drawIc(ic *InCallDetails) {
 }
 
 func (c *DisplayController) drawCf(cf *CallFinishedDetails) {
-	c.showMsg(center("Call"), hd44780.SHOW_LINE_1)
-	c.showMsg(center("Finished"), hd44780.SHOW_LINE_2)
+	c.showMsg(center("Call Finished"), hd44780.SHOW_LINE_1)
+	c.showMsg(center(), hd44780.SHOW_LINE_2)
 }
 
 func (c *DisplayController) drawDefaultMsg() {

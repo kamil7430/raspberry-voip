@@ -1,8 +1,14 @@
 package tcp
 
-import "net"
+import (
+	"net"
+	"time"
+)
 
-const bufferSize = 8196
+const (
+	bufferSize  = 8196
+	dialingTime = 15 * time.Second
+)
 
 func receive(conn net.Conn) {}
 

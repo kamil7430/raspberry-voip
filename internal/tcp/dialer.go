@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"time"
 
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
@@ -51,13 +52,26 @@ func Dial(addr string, state *state.State, d *display.DisplayController) error {
 	}
 
 	// wait for pickup
-	// TODO
+	timeoutTicker := time.NewTicker(dialingTime)
+	defer timeoutTicker.Stop()
+	select {
+	case <-timeoutTicker.C:
+		d.CallFinishedChan <- &display.CallFinishedDetails{
+			Time:   time.Now(),
+			Reason: "Dial timeout",
+		}
+		return nil
+		// case reject button clicked
+	}
 
 	// main call loop
 	for {
 		select {
 		case <-ctx.Done():
-			d.CallFinishedChan <- &display.CallFinishedDetails{}
+			d.CallFinishedChan <- &display.CallFinishedDetails{
+				Time:   time.Now(),
+				Reason: "Disconnected",
+			}
 			return nil
 		default:
 			receive(conn)

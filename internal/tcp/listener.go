@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net"
+	"time"
 
 	"github.com/kamil7430/raspberry-voip/internal/display"
 	"github.com/kamil7430/raspberry-voip/internal/state"
@@ -79,13 +80,27 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 	}
 
 	// wait for pickup
-	// TODO
+	timeoutTicker := time.NewTicker(dialingTime)
+	defer timeoutTicker.Stop()
+	select {
+	case <-timeoutTicker.C:
+		l.display.CallFinishedChan <- &display.CallFinishedDetails{
+			Time:   time.Now(),
+			Reason: "Dial timeout",
+		}
+		return
+		// case reject button clicked
+		// case accept button clicked
+	}
 
 	// main call loop
 	for {
 		select {
 		case <-ctx.Done():
-			l.display.CallFinishedChan <- &display.CallFinishedDetails{}
+			l.display.CallFinishedChan <- &display.CallFinishedDetails{
+				Time:   time.Now(),
+				Reason: "Disconnected",
+			}
 			conn.Close()
 			return
 		default:
