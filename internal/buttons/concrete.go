@@ -52,7 +52,10 @@ func (h *ConcreteButtonHandler) Start() {
 
 func (h *ConcreteButtonHandler) onAnswer() {
 	if h.state.GetConnectionContext() != nil {
-		h.state.AnswerButtonClickChan <- time.Now()
+		select {
+		case h.state.AnswerButtonClickChan <- time.Now():
+		default:
+		}
 	} else {
 		err := tcp.Dial(
 			h.state.GetDialingAddress(),
@@ -67,5 +70,8 @@ func (h *ConcreteButtonHandler) onAnswer() {
 }
 
 func (h *ConcreteButtonHandler) onReject() {
-	h.state.RejectButtonClickChan <- time.Now()
+	select {
+	case h.state.RejectButtonClickChan <- time.Now():
+	default:
+	}
 }
