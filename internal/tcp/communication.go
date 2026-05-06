@@ -34,6 +34,7 @@ func receiveAndPlay(conn net.Conn, audio *audio.AudioHandler, ctx context.Contex
 		case <-ctx.Done():
 			return
 		case audio.In <- receiveBuffer[:n]:
+			log.Printf("TCP send voice chunk")
 		}
 	}
 }
@@ -49,6 +50,7 @@ func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler, ctx context.C
 			}
 
 			_, err := conn.Write(out)
+			log.Printf("TCP send voice chunk")
 			if err != nil {
 				log.Printf("Error sending voice: %s\n", err)
 				return
