@@ -65,22 +65,3 @@ Configuration for external hardware (GPIO and I2C).
 *   `rejectGpioPin` - The GPIO pin number used for the "Reject/Hang up" button (e.g., `25`).
 *   `i2cAddress` - The **decimal** I2C address of your LCD backpack (e.g., `39`, which corresponds to `0x27` in hexadecimal).
 *   `i2cBus` - The I2C bus number to use (typically `1` on a Raspberry Pi 4).
-
-
-## Web Configuration Interface
-
-The application features a built-in web server that provides a user-friendly, concurrent configuration interface. You can access it by opening a web browser and navigating to the device's IP address and the port specified in your `httpServerAddr` configuration (e.g., `http://<device-ip>:2137`).
-
-Through the web panel, you can update the following settings on the fly:
-*   **Display Name:** The name shown to the other party (max 16 characters).
-*   **Dialing Address:** The default target IP and port for outbound calls.
-
-### Security and Verification
-
-To prevent unauthorized configuration changes over the network, the web interface implements a physical presence check using the connected LCD screen:
-
-1. When you want to save new settings, you must click the **"Wyświetl kod weryfikacyjny"** (Display verification code) button on the web page.
-2. The application will temporarily override the physical LCD screen to display a secure verification code.
-3. You must enter this exact code into the web form to authorize and save your changes.
-
-> **Note:** The interface includes rate-limiting for code generation requests to prevent spamming the LCD screen. If you request a code too frequently, you will be prompted to wait before trying again.
