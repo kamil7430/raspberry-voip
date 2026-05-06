@@ -37,10 +37,11 @@ func (l *Listener) Listen() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Fatal(err)
+			log.Println(err)
+			continue
 		}
 
-		ctx, cancelFunc := context.WithCancel(nil)
+		ctx, cancelFunc := context.WithCancel(context.Background())
 		if l.state.TrySetConnectionContext(ctx, cancelFunc) {
 			go l.handleConnection(conn, ctx)
 		} else {
@@ -51,32 +52,23 @@ func (l *Listener) Listen() {
 
 func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 	defer conn.Close()
+	defer l.state.TerminateConnection()
 
 	// our handshake with dialer
-	buffer := make([]byte, bufferSize)
-	_, err := conn.Read(buffer)
-	if err != nil {
-		log.Printf("Error reading from connection: %s\n", err)
-		return
-	}
 	var helloReceived helloMessage
-	err = json.Unmarshal(buffer, &helloReceived)
+	err := json.NewDecoder(conn).Decode(&helloReceived)
 	if err != nil {
-		log.Printf("Error unmarshalling the hello message: %s\n", err)
+		log.Println(err)
 		return
 	}
 	displayName := helloReceived.DisplayName
 
-	helloJson, err := json.Marshal(helloMessage{
+	helloJson := helloMessage{
 		DisplayName: l.state.GetDisplayName(),
-	})
-	if err != nil {
-		log.Printf("Error marshalling hello message: %s\n", err)
-		return
 	}
-	_, err = conn.Write(helloJson)
+	err = json.NewEncoder(conn).Encode(helloJson)
 	if err != nil {
-		log.Printf("Error sending hello message: %s\n", err)
+		log.Println(err)
 		return
 	}
 
@@ -99,17 +91,13 @@ func (l *Listener) handleConnection(conn net.Conn, ctx context.Context) {
 	}
 
 	// main call loop
-	for {
-		select {
-		case <-ctx.Done():
-			l.display.CallFinishedChan <- &display.CallFinishedDetails{
-				Time:   time.Now(),
-				Reason: "Disconnected",
-			}
-			return
-		default:
-			sendFromAudioBuffer(conn, l.audio)
-			receiveAndPlay(conn, l.audio)
-		}
+	go sendFromAudioBuffer(conn, l.audio)
+	go receiveAndPlay(conn, l.audio)
+
+	<-ctx.Done()
+
+	l.display.CallFinishedChan <- &display.CallFinishedDetails{
+		Time:   time.Now(),
+		Reason: "Disconnected",
 	}
 }

@@ -19,30 +19,23 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 	}
 	defer conn.Close()
 
-	ctx, cancelFunc := context.WithCancel(nil)
+	ctx, cancelFunc := context.WithCancel(context.Background())
 	if !state.TrySetConnectionContext(ctx, cancelFunc) {
 		log.Fatal("couldn't set connection context")
 	}
+	defer cancelFunc()
 
 	// our handshake with listener
-	helloJson, err := json.Marshal(helloMessage{
+	helloJson := helloMessage{
 		DisplayName: state.GetDisplayName(),
-	})
-	if err != nil {
-		return err
 	}
-	_, err = conn.Write(helloJson)
+	err = json.NewEncoder(conn).Encode(helloJson)
 	if err != nil {
 		return err
 	}
 
-	buffer := make([]byte, bufferSize)
-	_, err = conn.Read(buffer)
-	if err != nil {
-		return err
-	}
 	var helloReceived helloMessage
-	err = json.Unmarshal(buffer, &helloReceived)
+	err = json.NewDecoder(conn).Decode(&helloReceived)
 	if err != nil {
 		return err
 	}
@@ -66,17 +59,14 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 	}
 
 	// main call loop
-	for {
-		select {
-		case <-ctx.Done():
-			d.CallFinishedChan <- &display.CallFinishedDetails{
-				Time:   time.Now(),
-				Reason: "Disconnected",
-			}
-			return nil
-		default:
-			receiveAndPlay(conn, a)
-			sendFromAudioBuffer(conn, a)
-		}
+	go receiveAndPlay(conn, a)
+	go sendFromAudioBuffer(conn, a)
+
+	<-ctx.Done()
+
+	d.CallFinishedChan <- &display.CallFinishedDetails{
+		Time:   time.Now(),
+		Reason: "Disconnected",
 	}
+	return nil
 }

@@ -13,14 +13,16 @@ const (
 	dialingTime = 15 * time.Second
 )
 
-var receiveBuffer = make([]byte, bufferSize) // TODO: get bufferSize from audio
-
 func receiveAndPlay(conn net.Conn, audio *audio.AudioHandler) {
-	_, err := conn.Read(receiveBuffer)
+	receiveBuffer := make([]byte, bufferSize) // TODO: get bufferSize from audio
+
+	n, err := conn.Read(receiveBuffer)
 	if err != nil {
 		log.Printf("Error reading from connection: %s\n", err)
+		return
 	}
-	audio.In <- receiveBuffer
+
+	audio.In <- receiveBuffer[:n]
 }
 
 func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler) {
