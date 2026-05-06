@@ -16,19 +16,24 @@ const (
 
 func receiveAndPlay(conn net.Conn, audio *audio.AudioHandler, ctx context.Context) {
 	for {
+		if ctx.Err() != nil {
+			return
+		}
+
+		receiveBuffer := make([]byte, bufferSize)
+
+		n, err := conn.Read(receiveBuffer)
+		if err != nil {
+			log.Printf("Error reading from connection: %s\n", err)
+			return
+		}
+
+		audio.In <- receiveBuffer[:n]
+
 		select {
 		case <-ctx.Done():
 			return
-		default:
-			receiveBuffer := make([]byte, bufferSize)
-
-			n, err := conn.Read(receiveBuffer)
-			if err != nil {
-				log.Printf("Error reading from connection: %s\n", err)
-				return
-			}
-
-			audio.In <- receiveBuffer[:n]
+		case audio.In <- receiveBuffer[:n]:
 		}
 	}
 }
@@ -38,10 +43,15 @@ func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler, ctx context.C
 		select {
 		case <-ctx.Done():
 			return
-		default:
-			_, err := conn.Write(<-audio.Out)
+		case in, ok := <-audio.In:
+			if !ok {
+				return
+			}
+
+			_, err := conn.Write(in)
 			if err != nil {
 				log.Printf("Error sending voice: %s\n", err)
+				return
 			}
 		}
 	}
