@@ -59,8 +59,8 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 	}
 
 	// main call loop
-	go receiveAndPlay(conn, a)
-	go sendFromAudioBuffer(conn, a)
+	go receiveAndPlay(conn, a, ctx)
+	go sendFromAudioBuffer(conn, a, ctx)
 
 	<-ctx.Done()
 

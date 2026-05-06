@@ -1,6 +1,7 @@
 package tcp
 
 import (
+	"context"
 	"log"
 	"net"
 	"time"
@@ -9,25 +10,39 @@ import (
 )
 
 const (
-	bufferSize  = 8196
+	bufferSize  = 1024
 	dialingTime = 15 * time.Second
 )
 
-func receiveAndPlay(conn net.Conn, audio *audio.AudioHandler) {
-	receiveBuffer := make([]byte, bufferSize) // TODO: get bufferSize from audio
+func receiveAndPlay(conn net.Conn, audio *audio.AudioHandler, ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			receiveBuffer := make([]byte, bufferSize)
 
-	n, err := conn.Read(receiveBuffer)
-	if err != nil {
-		log.Printf("Error reading from connection: %s\n", err)
-		return
+			n, err := conn.Read(receiveBuffer)
+			if err != nil {
+				log.Printf("Error reading from connection: %s\n", err)
+				return
+			}
+
+			audio.In <- receiveBuffer[:n]
+		}
 	}
-
-	audio.In <- receiveBuffer[:n]
 }
 
-func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler) {
-	_, err := conn.Write(<-audio.Out)
-	if err != nil {
-		log.Printf("Error sending voice: %s\n", err)
+func sendFromAudioBuffer(conn net.Conn, audio *audio.AudioHandler, ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			_, err := conn.Write(<-audio.Out)
+			if err != nil {
+				log.Printf("Error sending voice: %s\n", err)
+			}
+		}
 	}
 }
