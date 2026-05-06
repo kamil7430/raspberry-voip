@@ -54,12 +54,15 @@ func (h *ConcreteButtonHandler) onAnswer() {
 	if h.state.GetConnectionContext() != nil {
 		h.state.AnswerButtonClickChan <- time.Now()
 	} else {
-		_ = tcp.Dial(
+		err := tcp.Dial(
 			h.state.GetDialingAddress(),
 			h.state,
 			h.display,
 			h.audio,
 		)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 }
 
