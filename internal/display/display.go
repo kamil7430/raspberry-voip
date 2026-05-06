@@ -8,6 +8,7 @@ import (
 
 	"github.com/d2r2/go-hd44780"
 	"github.com/d2r2/go-i2c"
+	"github.com/d2r2/go-logger"
 )
 
 const (
@@ -55,6 +56,10 @@ type RedrawingRequestDetails struct{}
 
 func NewDisplayController() *DisplayController {
 	// TODO: i2c connection leak -- no Close invocation
+	err := logger.ChangePackageLogLevel("i2c", logger.InfoLevel)
+	if err != nil {
+		log.Fatal(err)
+	}
 	i2cConn, err := i2c.NewI2C(i2cAddress, i2cBus)
 	if err != nil {
 		log.Fatal(err)
