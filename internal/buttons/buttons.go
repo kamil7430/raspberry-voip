@@ -1,5 +1,6 @@
 package buttons
 
+/*
 import (
 	"log"
 	"time"
@@ -81,3 +82,4 @@ func (h *ButtonHandler) Close() {
 	}
 	gpio.Close()
 }
+*/
