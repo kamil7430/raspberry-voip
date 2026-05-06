@@ -32,7 +32,7 @@ func runDisplayEventLoop(d *display.DisplayController) {
 }
 
 func runListener(s *state.State, d *display.DisplayController, a *audio.AudioHandler) {
-	log.Println("Starting audio listener...")
+	log.Println("Starting tcp listener...")
 	listener := tcp.NewListener(s, d, a)
 	listener.Listen()
 }
