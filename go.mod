@@ -12,6 +12,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/gen2brain/alsa v0.5.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
+	github.com/warthog618/go-gpiocdev v0.9.1 // indirect
 	github.com/warthog618/gpio v1.0.1 // indirect
 	golang.org/x/sys v0.35.0 // indirect
 )
