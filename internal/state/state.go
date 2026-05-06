@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/kamil7430/raspberry-voip/internal/config"
 )
 
 const (
@@ -32,15 +34,22 @@ type State struct {
 }
 
 func NewState() *State {
-	return &State{
-		displayName:                 "DefaultUser",
-		dialingAddress:              "localhost:8080",
+	s := &State{
+		displayName:                 "A user",
+		dialingAddress:              config.LoadString("dialingAddress"),
 		verificationCode:            nil,
 		connectionContext:           nil,
 		connectionContextCancelFunc: nil,
 		AnswerButtonClickChan:       make(chan time.Time),
 		RejectButtonClickChan:       make(chan time.Time),
 	}
+
+	err := s.SetDisplayName(config.LoadString("displayName"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return s
 }
 
 func (s *State) GetDisplayName() string {

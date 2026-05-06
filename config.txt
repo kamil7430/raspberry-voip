@@ -1,3 +1,7 @@
+; Default user settings
+displayName=DefaultUser ; max 16 characters
+dialingAddress=localhost:8080
+
 ; Audio settings
 captureCard=0
 captureDevice=0
