@@ -94,6 +94,7 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 
 			select {
 			case h.Out <- buf:
+				log.Printf("Audio recording chunk")
 			case <-ctx.Done():
 				return
 			}
@@ -128,6 +129,7 @@ func (h *AudioHandler) playbackRoutine(ctx context.Context) {
 			stereoData := monoToStereo(monoData)
 			
 			_, err := p.Write(stereoData)
+			log.Printf("Audio playback chunk")
 			if err != nil {
 				log.Printf("Audio Playback Write Error: %v", err)
 			}
