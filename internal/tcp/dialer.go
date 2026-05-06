@@ -23,7 +23,7 @@ func Dial(addr string, state *state.State, d *display.DisplayController, a *audi
 	if !state.TrySetConnectionContext(ctx, cancelFunc) {
 		log.Fatal("couldn't set connection context")
 	}
-	defer cancelFunc()
+	defer state.TerminateConnection()
 
 	// our handshake with listener
 	helloJson := helloMessage{
