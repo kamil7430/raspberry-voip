@@ -6,6 +6,7 @@ import (
 
 	"github.com/gen2brain/alsa"
 	"github.com/kamil7430/raspberry-voip/internal/config"
+	resampling "github.com/tphakala/go-audio-resampling"
 )
 
 type AudioHandler struct {
@@ -76,9 +77,26 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 	}
 	defer p.Close()
 
-	log.Printf("Audio Capture Started: Card %d, Device %d (Mono)", h.CaptureCard, h.CaptureDevice)
+	log.Printf("Audio Capture Started: Card %d, Device %d (Mono, %d Hz)", h.CaptureCard, h.CaptureDevice, h.SampleRate)
+
+	resConfig := &resampling.Config{
+		InputRate:  float64(h.SampleRate),
+		OutputRate: 48000,
+		Channels:   1,
+		Quality:    resampling.QualitySpec{Preset: resampling.QualityLow},
+	}
+
+	var resampler resampling.Resampler
+	if h.SampleRate != 48000 {
+		resampler, err = resampling.New(resConfig)
+		if err != nil {
+			log.Printf("Audio Capture Resampler Error: %v", err)
+			return
+		}
+	}
 
 	bufferSize := alsa.PcmFramesToBytes(p, alsaConfig.PeriodSize)
+	buf := make([]byte, bufferSize)
 
 	for {
 		select {
@@ -86,16 +104,35 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 			log.Println("Audio Capture Stopped")
 			return
 		default:
-			buf := make([]byte, bufferSize)
-			_, err := p.Read(buf)
+			n, err := p.Read(buf)
 			if err != nil {
 				log.Printf("Audio Capture Read Error: %v", err)
 				continue
 			}
 
+			data := buf[:n]
+			var outBuf []byte
+
+			if resampler != nil {
+				floatBuf := bytesToFloat64(data)
+				resampledFloats, err := resampler.Process(floatBuf)
+				if err != nil {
+					log.Printf("Audio Capture Resampling Error: %v", err)
+					continue
+				}
+				outBuf = float64ToBytes(resampledFloats)
+			} else {
+				// Copy data to avoid modification if buffer is reused
+				outBuf = make([]byte, len(data))
+				copy(outBuf, data)
+			}
+
+			if len(outBuf) == 0 {
+				continue
+			}
+
 			select {
-			case h.Out <- buf:
-				log.Printf("Audio recording chunk")
+			case h.Out <- outBuf:
 			case <-ctx.Done():
 				return
 			}
@@ -106,7 +143,7 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 func (h *AudioHandler) playbackRoutine(ctx context.Context) {
 	alsaConfig := &alsa.Config{
 		Channels:    h.PlaybackChannels,
-		Rate:        h.SampleRate,
+		Rate:        48000,
 		Format:      h.Format,
 		PeriodSize:  h.PeriodSize,
 		PeriodCount: h.PeriodCount,
@@ -119,18 +156,20 @@ func (h *AudioHandler) playbackRoutine(ctx context.Context) {
 	}
 	defer p.Close()
 
-	log.Printf("Audio Playback Started: Card %d, Device %d (Stereo)", h.PlaybackCard, h.PlaybackDevice)
+	log.Printf("Audio Playback Started: Card %d, Device %d (Stereo, 48000 Hz)", h.PlaybackCard, h.PlaybackDevice)
 
 	for {
 		select {
 		case <-ctx.Done():
 			log.Println("Audio Playback Stopped")
 			return
-		case monoData := <-h.In:
+		case monoData, ok := <-h.In:
+			if !ok {
+				return
+			}
 			stereoData := monoToStereo(monoData)
 
 			_, err := p.Write(stereoData)
-			log.Printf("Audio playback chunk")
 			if err != nil {
 				log.Printf("Audio Playback Write Error: %v", err)
 			}
@@ -139,25 +178,39 @@ func (h *AudioHandler) playbackRoutine(ctx context.Context) {
 }
 
 func monoToStereo(mono []byte) []byte {
+	// Assumes S16LE (2 bytes per sample)
 	stereo := make([]byte, len(mono)*2)
-
-	for i := 0; i < len(mono); i += 2 {
-		if i+1 >= len(mono) {
-			break
-		}
-
-		// Grab the 2 bytes making up the 16-bit mono sample
-		b1 := mono[i]
-		b2 := mono[i+1]
-
-		// Write to Left channel
-		stereo[i*2] = b1
-		stereo[i*2+1] = b2
-
-		// Write to Right channel (duplicate of Left)
-		stereo[i*2+2] = b1
-		stereo[i*2+3] = b2
+	for i := 0; i+1 < len(mono); i += 2 {
+		// Left channel
+		stereo[i*2] = mono[i]
+		stereo[i*2+1] = mono[i+1]
+		// Right channel
+		stereo[i*2+2] = mono[i]
+		stereo[i*2+3] = mono[i+1]
 	}
-
 	return stereo
+}
+
+func bytesToFloat64(pcm []byte) []float64 {
+	floats := make([]float64, len(pcm)/2)
+	for i := 0; i+1 < len(pcm); i += 2 {
+		val := int16(pcm[i]) | (int16(pcm[i+1]) << 8)
+		floats[i/2] = float64(val) / 32768.0
+	}
+	return floats
+}
+
+func float64ToBytes(floats []float64) []byte {
+	pcm := make([]byte, len(floats)*2)
+	for i, f := range floats {
+		val := int32(f * 32768.0)
+		if val > 32767 {
+			val = 32767
+		} else if val < -32768 {
+			val = -32768
+		}
+		pcm[i*2] = byte(val)
+		pcm[i*2+1] = byte(val >> 8)
+	}
+	return pcm
 }
