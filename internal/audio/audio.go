@@ -66,7 +66,7 @@ func (h *AudioHandler) captureRoutine(ctx context.Context) {
 		Channels:    h.CaptureChannels,
 		Rate:        h.SampleRate,
 		Format:      h.Format,
-		PeriodSize:  h.PeriodSize,
+		PeriodSize:  h.PeriodSize * h.SampleRate / 48000,
 		PeriodCount: h.PeriodCount,
 	}
 
