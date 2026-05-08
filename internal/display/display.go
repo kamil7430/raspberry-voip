@@ -195,7 +195,7 @@ func (c *DisplayController) drawIc(ic *InCallDetails) {
 	timeString := fmt.Sprintf(
 		"%03d:%02d",
 		int(duration.Minutes()),
-		int(duration.Seconds()),
+		int(duration.Seconds()) % 60,
 	)
 
 	c.showMsg(center(timeString), hd44780.SHOW_LINE_1) // 6 chars
